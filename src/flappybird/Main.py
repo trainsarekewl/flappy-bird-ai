@@ -1,10 +1,9 @@
 import pygame
 import sys
 from pathlib import Path
-from Bird import Bird
+from src.flappybird.Bird import Bird
 from Pipes import Pipes
-import config
-
+from src.flappybird import config
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -14,7 +13,6 @@ WINDOW_LENGTH = config.WINDOW_LENGTH
 JUMP_COOLDOWN = config.JUMP_COOLDOWN
 PIPE_SPEED = config.PIPE_SPEED
 COLOR = config.COLOR
-BASE_DIR = config.BASE_DIR
 
 def main():
     # initalize pygame stuff
@@ -24,7 +22,8 @@ def main():
 
     # settings
     BIRD_HEIGHT = 150
-    PIPE_COOLDOWN = (int) (WINDOW_LENGTH / 9)
+    INIT_PIPE_COOLDOWN = (int) (WINDOW_LENGTH / 9)
+    PIPE_COOLDOWN_CHANGE_RATE = 46
 
     # initalize variables
     cooldown = 0
@@ -34,22 +33,28 @@ def main():
     jumping = True
     score = 0
     scoreFont = pygame.font.SysFont("Comic Sans MS", 20)
-    
+    pipe_cooldown = INIT_PIPE_COOLDOWN
+    last_cooldown_update = 0
 
 
     pygame.display.set_caption("flappy bird")
 
     # create bird
     bird = Bird(50, BIRD_HEIGHT)
-    
+
     # create window
     window = pygame.display.set_mode((WINDOW_LENGTH, WINDOW_HEIGHT))
 
     while True:
         # update screen and make 60 fps
         clock.tick(60)
-        window.fill(COLOR)  
-    
+        window.fill(COLOR)
+
+        # every 10 score decrease pipe cooldown
+        if score % 2 == 0 and score != 0 and score != last_cooldown_update and pipe_cooldown > 45:
+            pipe_cooldown -= PIPE_COOLDOWN_CHANGE_RATE
+            last_cooldown_update = score
+
         # check events
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -63,28 +68,29 @@ def main():
                         bird.jump()
                         game = True
                         cooldown = JUMP_COOLDOWN
-                    
+
                     else:
                         bird.jump()
                         cooldown = JUMP_COOLDOWN
-                
+
                 # restart
                 if event.key == pygame.K_r:
                     jumping = True
                     bird.setYValue(BIRD_HEIGHT)
                     score = 0
-
+                    pipe_cooldown = INIT_PIPE_COOLDOWN
+                    cooldown = 0
                     for i in range(0, len(obstacles)):
                         obstacles.pop()
 
 
-        
+
         # pipe stuff
         # add pipe
-        if len(obstacles) < 4 and game and pipe_cool <= 0:
+        if game and pipe_cool <= 0:
             pipes = Pipes()
             obstacles.append(pipes)
-            pipe_cool = PIPE_COOLDOWN
+            pipe_cool = pipe_cooldown
 
         pipe_cool -= 1
 
@@ -122,7 +128,7 @@ def main():
         # check if bird is is in game
         if bird.getYValue() < 0:
             bird.setYValue(0)
-        
+
         if bird.getYValue() >= WINDOW_HEIGHT - 10:
             bird.setYValue(WINDOW_HEIGHT - 10)
             gameOverFont = pygame.font.SysFont("Comic Sans MS", 50)
@@ -137,7 +143,7 @@ def main():
 
         # draw stuff
         bird.draw(window)
-        
+
         # display font
         stringScore = str(score)
         textScore = scoreFont.render("score: " + stringScore, 1, (125, 125, 125))
@@ -149,5 +155,4 @@ def main():
             cooldown -= 1
 
 if __name__ == "__main__":
-
     main()

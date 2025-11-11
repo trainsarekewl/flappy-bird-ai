@@ -1,14 +1,13 @@
 import pygame
 import random
 from pathlib import Path
-import config
+from src.flappybird import config
 
 WINDOW_HEIGHT = config.WINDOW_HEIGHT
 WINDOW_LENGTH = config.WINDOW_LENGTH
 JUMP_COOLDOWN = config.JUMP_COOLDOWN
 PIPE_SPEED = config.PIPE_SPEED
 COLOR = config.COLOR
-BASE_DIR = config.BASE_DIR
 
 class Pipes(pygame.sprite.Sprite):
     BASE_DIR = Path(__file__).resolve().parent.parent
@@ -45,3 +44,6 @@ class Pipes(pygame.sprite.Sprite):
 
     def getWidth(self):
         return self.WIDTH
+
+    def getHeight(self):
+        return self.HEIGHT
