@@ -24,8 +24,14 @@ def eval_agent(net, env, max_frames=3000):
     obstacles = []
     pipe_cd = INIT_PIPE_COOLDOWN
     last_pipe_time = pipe_cd
+    last_cooldown_update = 0
+    PIPE_COOLDOWN_CHANGE_RATE = env["PIPE_COOLDOWN_CHANGE_RATE"]
 
     for frame in range(max_frames):
+        if score % 2 == 0 and score != 0 and score != last_cooldown_update and pipe_cd > 45:
+            pipe_cd -= PIPE_COOLDOWN_CHANGE_RATE
+            last_cooldown_update = score
+
         if last_pipe_time >= pipe_cd:
             obstacles.append(env["pipe_class"]())
             last_pipe_time = 0

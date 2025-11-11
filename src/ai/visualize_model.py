@@ -22,6 +22,8 @@ def visualize_model(model_path = "best_net.pt"):
     last_pipe_time = pipe_cd
     score = 0
     game = True
+    PIPE_COOLDOWN_CHANGE_RATE = config.PIPE_COOLDOWN_CHANGE_RATE
+    last_cooldown_update = 0
 
     while game:
         clock.tick(60)
@@ -31,6 +33,10 @@ def visualize_model(model_path = "best_net.pt"):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 game = False
+
+        if score % 2 == 0 and score != 0 and score != last_cooldown_update and pipe_cd > 45:
+            pipe_cd -= PIPE_COOLDOWN_CHANGE_RATE
+            last_cooldown_update = score
 
         if last_pipe_time >= pipe_cd:
             obstacles.append(Pipes())
@@ -88,8 +94,11 @@ def visualize_model(model_path = "best_net.pt"):
 
         # draw stuff
         stringScore = str(score)
+        StringPipeCD = str(pipe_cd)
         textScore = font.render("score: " + stringScore, 1, (125, 125, 125))
+        textPipeCD = font.render("Pipe CD: " + StringPipeCD, 1, (125, 125, 125))
         window.blit(textScore, (0, 0))
+        window.blit(textPipeCD, (0, 20))
 
         bird.draw(window)
         pygame.display.update()

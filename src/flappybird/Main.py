@@ -13,6 +13,7 @@ WINDOW_LENGTH = config.WINDOW_LENGTH
 JUMP_COOLDOWN = config.JUMP_COOLDOWN
 PIPE_SPEED = config.PIPE_SPEED
 COLOR = config.COLOR
+PIPE_COOLDOWN_CHANGE_RATE = config.PIPE_COOLDOWN_CHANGE_RATE
 
 def main():
     # initalize pygame stuff
@@ -23,7 +24,7 @@ def main():
     # settings
     BIRD_HEIGHT = 150
     INIT_PIPE_COOLDOWN = (int) (WINDOW_LENGTH / 9)
-    PIPE_COOLDOWN_CHANGE_RATE = 2
+
 
     # initalize variables
     cooldown = 0
