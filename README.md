@@ -1,2 +1,2 @@
 # flappy_bird
-i try to make flappy  bird with pygame
+i try to have ai play flappybird
