@@ -23,7 +23,7 @@ def main():
     # settings
     BIRD_HEIGHT = 150
     INIT_PIPE_COOLDOWN = (int) (WINDOW_LENGTH / 9)
-    PIPE_COOLDOWN_CHANGE_RATE = 46
+    PIPE_COOLDOWN_CHANGE_RATE = 2
 
     # initalize variables
     cooldown = 0
@@ -154,5 +154,5 @@ def main():
         if cooldown > 0 :
             cooldown -= 1
 
-if __name__ == "__main__":
-    main()
+
+main()
