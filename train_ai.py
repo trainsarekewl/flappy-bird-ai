@@ -8,6 +8,7 @@ env = {
     "bird_class": Bird,
     "pipe_class": Pipes,
     "window_height": config.WINDOW_HEIGHT,
+    "window_width": config.WINDOW_LENGTH,
     "init_pipe_cooldown": (int) (config.WINDOW_LENGTH / 9),
 }
 

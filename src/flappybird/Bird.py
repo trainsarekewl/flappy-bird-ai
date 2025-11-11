@@ -32,6 +32,9 @@ class Bird(pygame.sprite.Sprite):
     def getYValue(self):
         return self.y
 
+    def getXValue(self):
+        return self.x
+
     def getYVelocity(self):
         return self.y_velocity
 

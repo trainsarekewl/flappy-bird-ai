@@ -23,7 +23,7 @@ def eval_agent(net, env, max_frames=3000):
     bird = env["bird_class"](50, 150)
     obstacles = []
     pipe_cd = INIT_PIPE_COOLDOWN
-    last_pipe_time = 0
+    last_pipe_time = pipe_cd
 
     for frame in range(max_frames):
         if last_pipe_time >= pipe_cd:
@@ -39,13 +39,18 @@ def eval_agent(net, env, max_frames=3000):
 
         if next_pipe is not None:
             inputs = torch.tensor([
-                bird.getYValue(),
-                bird.getYVelocity(),
-                next_pipe.getXVal(),
-                next_pipe.getHeight()
+                bird.getYValue() / env["window_height"],
+                bird.getYVelocity() / 10,
+                next_pipe.getXVal() / env["window_width"],
+                next_pipe.getHeight() /env["window_height"]
             ], dtype=torch.float32)
         else:
-            inputs = torch.zeros(4)
+            inputs = torch.tensor([
+                bird.getYValue() / env["window_height"],
+                bird.getYVelocity() / 10,
+                0,
+                0
+            ])
 
         if net(inputs).item() > 0.5:
             bird.jump()
@@ -63,7 +68,7 @@ def eval_agent(net, env, max_frames=3000):
 
             # died/lost
             if birdRect.colliderect(bottomRect) or birdRect.colliderect(topRect):
-                return score
+                return score + frame * 0.01
 
         removed = 0
         for i in removePipe:
@@ -72,9 +77,9 @@ def eval_agent(net, env, max_frames=3000):
             removed += 1
 
         if bird.getYValue() < 0 or bird.getYValue() >= env["window_height"] - 10:
-            return score
+            return score + frame * 0.01
 
-def evolve(env, generations=20, pop_size=20, mutation_rate = 0.1):
+def evolve(env, generations=20, pop_size=100, mutation_rate = 0.1):
     nets = [FlappyBirdNet() for _ in range(pop_size)]
     for gen in range(generations):
         scores = [(eval_agent(net, env), net) for net in nets]
