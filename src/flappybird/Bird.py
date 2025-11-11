@@ -1,5 +1,5 @@
 import pygame
-import config
+from src.flappybird import config
 
 WINDOW_HEIGHT = config.WINDOW_HEIGHT
 WINDOW_LENGTH = config.WINDOW_LENGTH

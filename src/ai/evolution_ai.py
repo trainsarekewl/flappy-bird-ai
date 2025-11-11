@@ -84,7 +84,7 @@ def evolve(env, generations=20, pop_size=20, mutation_rate = 0.1):
         survivors = []
 
         for i in range(int(pop_size * 0.1)):
-            survivors.append(scores[i])
+            survivors.append(scores[i][1])
 
         new_population = []
         for i in range(pop_size):
