@@ -1,5 +1,3 @@
-from pathlib import Path
-
 # settings
 COLOR = (255, 255, 255)
 WINDOW_HEIGHT = 480

@@ -78,8 +78,9 @@ def eval_agent(net, env, max_frames=3000):
 
         if bird.getYValue() < 0 or bird.getYValue() >= env["window_height"] - 10:
             return score + frame * 0.01
+    return score + frame * 0.01
 
-def evolve(env, generations=20, pop_size=100, mutation_rate = 0.1):
+def evolve(env, generations=40, pop_size=100, mutation_rate = 0.1):
     nets = [FlappyBirdNet() for _ in range(pop_size)]
     for gen in range(generations):
         scores = [(eval_agent(net, env), net) for net in nets]
