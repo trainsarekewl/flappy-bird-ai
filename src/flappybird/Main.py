@@ -52,7 +52,7 @@ def main():
         window.fill(COLOR)
 
         # every 10 score decrease pipe cooldown
-        if score % 2 == 0 and score != 0 and score != last_cooldown_update and pipe_cooldown > 45:
+        if score % 10 == 0 and score != 0 and score != last_cooldown_update and pipe_cooldown > 45:
             pipe_cooldown -= PIPE_COOLDOWN_CHANGE_RATE
             last_cooldown_update = score
 

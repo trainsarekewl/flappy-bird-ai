@@ -11,6 +11,7 @@ env = {
     "window_height": config.WINDOW_HEIGHT,
     "window_width": config.WINDOW_LENGTH,
     "init_pipe_cooldown": (int) (config.WINDOW_LENGTH / 9),
+    "PIPE_COOLDOWN_CHANGE_RATE": config.PIPE_COOLDOWN_CHANGE_RATE
 }
 
 best_net = evolve(env)

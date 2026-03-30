@@ -34,7 +34,7 @@ def visualize_model(model_path = "best_net.pt"):
             if event.type == pygame.QUIT:
                 game = False
 
-        if score % 2 == 0 and score != 0 and score != last_cooldown_update and pipe_cd > 45:
+        if score % 10 == 0 and score != 0 and score != last_cooldown_update and pipe_cd > 45:
             pipe_cd -= PIPE_COOLDOWN_CHANGE_RATE
             last_cooldown_update = score
 
@@ -44,25 +44,39 @@ def visualize_model(model_path = "best_net.pt"):
         last_pipe_time += 1
 
         next_pipe = None
+        second_pipe = None
+        nextPipeFound = False
         for pipe in obstacles:
             if pipe.getXVal() + pipe.getWidth() > bird.getXValue():
-                next_pipe = pipe
-                break
+                if nextPipeFound == False:
+                    next_pipe = pipe
+                    nextPipeFound = True
+                elif nextPipeFound == True:
+                    second_pipe = pipe
+                    break
 
-        if next_pipe is not None:
+        if next_pipe is not None and second_pipe is not None:
             inputs = torch.tensor([
                 bird.getYValue() / config.WINDOW_HEIGHT,
                 bird.getYVelocity() / 10,
                 next_pipe.getXVal() / config.WINDOW_LENGTH,
-                next_pipe.getHeight() / config.WINDOW_HEIGHT
+                next_pipe.getHeight() / config.WINDOW_HEIGHT,
+            ], dtype=torch.float32)
+
+        elif next_pipe is not None and second_pipe is None:
+            inputs = torch.tensor([
+                bird.getYValue() / config.WINDOW_HEIGHT,
+                bird.getYVelocity() / 10,
+                next_pipe.getXVal() / config.WINDOW_LENGTH,
+                next_pipe.getHeight() / config.WINDOW_HEIGHT,
             ], dtype=torch.float32)
         else:
             inputs = torch.tensor([
                 bird.getYValue() / config.WINDOW_HEIGHT,
                 bird.getYVelocity() / 10,
                 0,
-                0
-            ])
+                0,
+            ], dtype=torch.float32)
 
         if net(inputs).item() > 0.5:
             bird.jump()

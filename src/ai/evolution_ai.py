@@ -8,15 +8,15 @@ class FlappyBirdNet(nn.Module):
     def __init__(self):
         super().__init__()
         self.network = nn.Sequential(
-            nn.Linear(4, 16),
+            nn.Linear(4, 64),
             nn.ReLU(),
-            nn.Linear(16, 1)
+            nn.Linear(64, 1)
         )
 
     def forward(self, x):
         return self.network(x)
 
-def eval_agent(net, env, max_frames=3000):
+def eval_agent(net, env, max_frames=10000):
     INIT_PIPE_COOLDOWN = env["init_pipe_cooldown"]
 
     score = 0
@@ -48,15 +48,15 @@ def eval_agent(net, env, max_frames=3000):
                 bird.getYValue() / env["window_height"],
                 bird.getYVelocity() / 10,
                 next_pipe.getXVal() / env["window_width"],
-                next_pipe.getHeight() /env["window_height"]
+                next_pipe.getHeight() / env["window_height"],
             ], dtype=torch.float32)
         else:
             inputs = torch.tensor([
                 bird.getYValue() / env["window_height"],
                 bird.getYVelocity() / 10,
                 0,
-                0
-            ])
+                0,
+            ], dtype=torch.float32)
 
         if net(inputs).item() > 0.5:
             bird.jump()
@@ -83,10 +83,10 @@ def eval_agent(net, env, max_frames=3000):
             removed += 1
 
         if bird.getYValue() < 0 or bird.getYValue() >= env["window_height"] - 10:
-            return score + frame * 0.01
+            return score + frame * 0.01 - 5
     return score + frame * 0.01
 
-def evolve(env, generations=40, pop_size=100, mutation_rate = 0.1):
+def evolve(env, generations=50, pop_size=300, mutation_rate = 0.1):
     nets = [FlappyBirdNet() for _ in range(pop_size)]
     for gen in range(generations):
         scores = [(eval_agent(net, env), net) for net in nets]
