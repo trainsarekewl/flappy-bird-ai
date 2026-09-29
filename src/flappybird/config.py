@@ -5,3 +5,14 @@ WINDOW_LENGTH = 780
 JUMP_COOLDOWN = 1
 PIPE_SPEED = 3
 PIPE_COOLDOWN_CHANGE_RATE = 2
+
+# pipe spawn cooldown (frames between pipes), see difficulty.py
+INIT_PIPE_COOLDOWN = int(WINDOW_LENGTH / 9)
+MIN_PIPE_COOLDOWN = 45
+# fast phase: every FAST_SCORE_STEP points, cooldown drops by FAST_COOLDOWN_CHANGE
+FAST_SCORE_STEP = 5
+FAST_COOLDOWN_CHANGE = PIPE_COOLDOWN_CHANGE_RATE
+# once cooldown reaches SLOW_PHASE_COOLDOWN, switch to the slow phase
+SLOW_PHASE_COOLDOWN = 66
+SLOW_SCORE_STEP = 10
+SLOW_COOLDOWN_CHANGE = 1

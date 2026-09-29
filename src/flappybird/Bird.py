@@ -9,9 +9,11 @@ COLOR = config.COLOR
 
 class Bird(pygame.sprite.Sprite):
     COLOR = (0, 0, 128)
-    JUMP_HEIGHT = -5
+    # jump and gravity are scaled together so one tap still climbs ~70px, but the bird
+    # can climb 12px/frame -> any gap change is passable down to a pipe cooldown of ~41
+    JUMP_HEIGHT = -12
     RADIUS = 10
-    GRAVITY = 0.2
+    GRAVITY = 1.0
 
     def __init__(self, x, y):
         self.x = x
