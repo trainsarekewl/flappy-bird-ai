@@ -5,7 +5,7 @@ import torch.nn as nn
 import copy
 from src.flappybird.difficulty import get_pipe_cooldown, INIT_PIPE_COOLDOWN, MAX_DIFFICULTY_SCORE
 
-# bird y, bird velocity, pipe spawn cooldown, next pipe x/height, second pipe x/height
+# bird y, bird velocity, pipe spawn cooldown, next pipe x/gap offset, second pipe x/gap offset
 NUM_INPUTS = 7
 # scale down the second pipe's inputs so they don't drown out the next pipe
 SECOND_PIPE_WEIGHT = 0.5
@@ -27,18 +27,22 @@ def build_inputs(bird, obstacles, window_width, window_height, pipe_cd):
     next_pipe = upcoming[0] if len(upcoming) > 0 else None
     second_pipe = upcoming[1] if len(upcoming) > 1 else None
 
-    # a missing pipe is treated as far away (right edge) with a centered gap
+    # gap center relative to the bird: positive means the gap is below the bird
+    def gap_offset(gap_center):
+        return (gap_center - bird.getYValue()) / window_height
+
+    # a missing pipe is treated as far away (right edge) with a gap centered in the window
     if next_pipe is not None:
         next_x = next_pipe.getXVal() / window_width
-        next_height = next_pipe.getHeight() / window_height
+        next_height = gap_offset(next_pipe.getHeight() + next_pipe.GAP / 2)
     else:
-        next_x, next_height = 1.0, 0.5
+        next_x, next_height = 1.0, gap_offset(window_height / 2)
 
     if second_pipe is not None:
         second_x = second_pipe.getXVal() / window_width
-        second_height = second_pipe.getHeight() / window_height
+        second_height = gap_offset(second_pipe.getHeight() + second_pipe.GAP / 2)
     else:
-        second_x, second_height = 1.0, 0.5
+        second_x, second_height = 1.0, gap_offset(window_height / 2)
 
     return torch.tensor([
         bird.getYValue() / window_height,
@@ -101,18 +105,44 @@ def eval_agent(net, env, seed=None, max_score=MAX_SCORE, max_frames=50000):
             return score + frame * 0.01 - 5
     return score + frame * 0.01
 
-def evolve(env, generations=200, pop_size=150, mutation_rate = 0.05, elite_count=3):
+def avg_score(net, env, seeds):
+    return sum(eval_agent(net, env, seed) for seed in seeds) / len(seeds)
+
+# fixed layouts used only to pick the final model, never for selection during training
+_validation_rng = random.Random(1234)
+VALIDATION_SEEDS = [_validation_rng.randrange(2**32) for _ in range(20)]
+
+def evolve(env, generations=400, pop_size=100, mutation_rate = 0.05, elite_count=3, evals_per_net=5,
+           parent_fraction=0.2, min_mutation_rate=0.01):
     nets = [FlappyBirdNet() for _ in range(pop_size)]
+    best_net = None
+    best_val_score = float("-inf")
     for gen in range(generations):
-        # new layout each generation so the birds don't memorize one set of pipes
-        gen_seed = random.randrange(2**32)
-        scores = [(eval_agent(net, env, gen_seed), net) for net in nets]
+        # shrink mutations linearly: big jumps early to explore, small tweaks late to fine-tune
+        progress = gen / max(generations - 1, 1)
+        gen_mutation_rate = mutation_rate + (min_mutation_rate - mutation_rate) * progress
+
+        # several new layouts each generation so fitness rewards consistency, not one lucky run
+        gen_seeds = [random.randrange(2**32) for _ in range(evals_per_net)]
+        scores = [(avg_score(net, env, gen_seeds), net) for net in nets]
         scores.sort(reverse=True, key=lambda x: x[0])
-        print(f"Generation {gen} - Best score: {scores[0][0]}")
+
+        # keep the best model ever seen on the validation layouts
+        gen_val_score = float("-inf")
+        for i in range(elite_count):
+            val_score = avg_score(scores[i][1], env, VALIDATION_SEEDS)
+            gen_val_score = max(gen_val_score, val_score)
+            if val_score > best_val_score:
+                best_val_score = val_score
+                best_net = copy.deepcopy(scores[i][1])
+
+        print(f"Generation {gen} - Best avg score: {scores[0][0]:.2f} - "
+              f"Validation: {gen_val_score:.2f} (best ever {best_val_score:.2f}) - "
+              f"Mutation rate: {gen_mutation_rate:.4f}")
 
         survivors = []
 
-        for i in range(int(pop_size * 0.1)):
+        for i in range(int(pop_size * parent_fraction)):
             survivors.append(scores[i][1])
 
         # carry the best birds over unmutated so a good bird is never lost
@@ -122,8 +152,8 @@ def evolve(env, generations=200, pop_size=150, mutation_rate = 0.05, elite_count
             child = copy.deepcopy(parent)
             with torch.no_grad():
                 for param in child.parameters():
-                    param += torch.randn_like(param) * mutation_rate
+                    param += torch.randn_like(param) * gen_mutation_rate
             new_population.append(child)
         nets = new_population
 
-    return scores[0][1]
+    return best_net
