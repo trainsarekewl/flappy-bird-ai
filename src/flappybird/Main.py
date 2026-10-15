@@ -1,9 +1,14 @@
 import pygame
 import sys
 from pathlib import Path
+
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+
 from src.flappybird.Bird import Bird
-from Pipes import Pipes
+from src.flappybird.Pipes import Pipes
 from src.flappybird import config
+from src.flappybird.difficulty import get_pipe_cooldown
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -13,7 +18,6 @@ WINDOW_LENGTH = config.WINDOW_LENGTH
 JUMP_COOLDOWN = config.JUMP_COOLDOWN
 PIPE_SPEED = config.PIPE_SPEED
 COLOR = config.COLOR
-PIPE_COOLDOWN_CHANGE_RATE = config.PIPE_COOLDOWN_CHANGE_RATE
 
 def main():
     # initalize pygame stuff
@@ -23,7 +27,6 @@ def main():
 
     # settings
     BIRD_HEIGHT = 150
-    INIT_PIPE_COOLDOWN = (int) (WINDOW_LENGTH / 9)
 
 
     # initalize variables
@@ -34,8 +37,6 @@ def main():
     jumping = True
     score = 0
     scoreFont = pygame.font.SysFont("Comic Sans MS", 20)
-    pipe_cooldown = INIT_PIPE_COOLDOWN
-    last_cooldown_update = 0
 
 
     pygame.display.set_caption("flappy bird")
@@ -51,10 +52,8 @@ def main():
         clock.tick(60)
         window.fill(COLOR)
 
-        # every 10 score decrease pipe cooldown
-        if score % 10 == 0 and score != 0 and score != last_cooldown_update and pipe_cooldown > 45:
-            pipe_cooldown -= PIPE_COOLDOWN_CHANGE_RATE
-            last_cooldown_update = score
+        # pipe cooldown shrinks as score goes up (same schedule as the AI)
+        pipe_cooldown = get_pipe_cooldown(score)
 
         # check events
         for event in pygame.event.get():
@@ -79,7 +78,6 @@ def main():
                     jumping = True
                     bird.setYValue(BIRD_HEIGHT)
                     score = 0
-                    pipe_cooldown = INIT_PIPE_COOLDOWN
                     cooldown = 0
                     for i in range(0, len(obstacles)):
                         obstacles.pop()
@@ -156,4 +154,5 @@ def main():
             cooldown -= 1
 
 
-main()
+if __name__ == "__main__":
+    main()

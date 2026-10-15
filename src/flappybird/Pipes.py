@@ -18,8 +18,8 @@ class Pipes(pygame.sprite.Sprite):
     WIDTH = 50
     HEIGHT = 0
 
-    def __init__(self):
-        self.HEIGHT = random.randrange(10, WINDOW_HEIGHT - self.GAP + 10)
+    def __init__(self, rng=random):
+        self.HEIGHT = rng.randrange(10, WINDOW_HEIGHT - self.GAP + 10)
         self.rectTop = pygame.Rect(WINDOW_LENGTH - 5, 0, self.WIDTH, self.HEIGHT)
         self.rectBottom = pygame.Rect(WINDOW_LENGTH - 5, 0 + self.HEIGHT + self.GAP, self.WIDTH, 480 - self.HEIGHT)
         self.mask = None

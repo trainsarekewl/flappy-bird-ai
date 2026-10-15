@@ -1,12 +1,16 @@
 import pygame
 import torch
+from pathlib import Path
 from src.flappybird import config
 from src.flappybird.Bird import Bird
 from src.flappybird.Pipes import Pipes
-from src.ai.evolution_ai import evolve, FlappyBirdNet
+from src.flappybird.difficulty import get_pipe_cooldown, INIT_PIPE_COOLDOWN
+from src.ai.evolution_ai import evolve, FlappyBirdNet, build_inputs
+
+BEST_NET_PATH = Path(__file__).resolve().parents[2] / "best_net.pt"
 
 
-def visualize_model(model_path = "best_net.pt"):
+def visualize_model(model_path = BEST_NET_PATH):
     net = FlappyBirdNet()
     net.load_state_dict(torch.load(model_path))
 
@@ -17,13 +21,9 @@ def visualize_model(model_path = "best_net.pt"):
 
     bird = Bird(50, 150)
     obstacles = []
-    init_pipe_cooldown = (int) (config.WINDOW_LENGTH / 9)
-    pipe_cd = init_pipe_cooldown
-    last_pipe_time = pipe_cd
+    last_pipe_time = INIT_PIPE_COOLDOWN
     score = 0
     game = True
-    PIPE_COOLDOWN_CHANGE_RATE = config.PIPE_COOLDOWN_CHANGE_RATE
-    last_cooldown_update = 0
 
     while game:
         clock.tick(60)
@@ -34,49 +34,14 @@ def visualize_model(model_path = "best_net.pt"):
             if event.type == pygame.QUIT:
                 game = False
 
-        if score % 10 == 0 and score != 0 and score != last_cooldown_update and pipe_cd > 45:
-            pipe_cd -= PIPE_COOLDOWN_CHANGE_RATE
-            last_cooldown_update = score
+        pipe_cd = get_pipe_cooldown(score)
 
         if last_pipe_time >= pipe_cd:
             obstacles.append(Pipes())
             last_pipe_time = 0
         last_pipe_time += 1
 
-        next_pipe = None
-        second_pipe = None
-        nextPipeFound = False
-        for pipe in obstacles:
-            if pipe.getXVal() + pipe.getWidth() > bird.getXValue():
-                if nextPipeFound == False:
-                    next_pipe = pipe
-                    nextPipeFound = True
-                elif nextPipeFound == True:
-                    second_pipe = pipe
-                    break
-
-        if next_pipe is not None and second_pipe is not None:
-            inputs = torch.tensor([
-                bird.getYValue() / config.WINDOW_HEIGHT,
-                bird.getYVelocity() / 10,
-                next_pipe.getXVal() / config.WINDOW_LENGTH,
-                next_pipe.getHeight() / config.WINDOW_HEIGHT,
-            ], dtype=torch.float32)
-
-        elif next_pipe is not None and second_pipe is None:
-            inputs = torch.tensor([
-                bird.getYValue() / config.WINDOW_HEIGHT,
-                bird.getYVelocity() / 10,
-                next_pipe.getXVal() / config.WINDOW_LENGTH,
-                next_pipe.getHeight() / config.WINDOW_HEIGHT,
-            ], dtype=torch.float32)
-        else:
-            inputs = torch.tensor([
-                bird.getYValue() / config.WINDOW_HEIGHT,
-                bird.getYVelocity() / 10,
-                0,
-                0,
-            ], dtype=torch.float32)
+        inputs = build_inputs(bird, obstacles, config.WINDOW_LENGTH, config.WINDOW_HEIGHT, pipe_cd)
 
         if net(inputs).item() > 0.5:
             bird.jump()
