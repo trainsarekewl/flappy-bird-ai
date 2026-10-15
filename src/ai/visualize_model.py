@@ -1,13 +1,16 @@
 import pygame
 import torch
+from pathlib import Path
 from src.flappybird import config
 from src.flappybird.Bird import Bird
 from src.flappybird.Pipes import Pipes
 from src.flappybird.difficulty import get_pipe_cooldown, INIT_PIPE_COOLDOWN
 from src.ai.evolution_ai import evolve, FlappyBirdNet, build_inputs
 
+BEST_NET_PATH = Path(__file__).resolve().parents[2] / "best_net.pt"
 
-def visualize_model(model_path = "best_net.pt"):
+
+def visualize_model(model_path = BEST_NET_PATH):
     net = FlappyBirdNet()
     net.load_state_dict(torch.load(model_path))
 
